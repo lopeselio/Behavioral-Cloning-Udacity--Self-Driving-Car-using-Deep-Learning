@@ -7,6 +7,7 @@ from io import BytesIO
 from PIL import Image 
 import numpy as np
 sio = socketio.Server()
+import cv2
 
 app = Flask(__name__) #'__main__'
 
@@ -21,8 +22,13 @@ def img_preprocess(img):
 
 @sio.on('telemetry')
 def telemetry(sid, data):
-  image = image.open(BytesIO(base64.b64decode(data['iamge'])))
+  image = Image.open(BytesIO(base64.b64decode(data['image'])))
   image = np.asarray(image)
+  image = img_preprocess(image)
+  image = np.array([image])
+  steering_angle = float(model.predict(image))
+  send_control(steering_angle, 1.0)
+
 @sio.on('connect')
 def connect(sid, environ):
   print('Connected')
